@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Paras.ai Chat - Jain Wisdom</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Crimson+Text:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.1/marked.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #fffbf0 0%, #fef5e7 50%, #fff9e6 100%);
+      min-height: 100vh; display: flex; flex-direction: column;
+    }
+
+    header {
+      background: rgba(255,255,255,0.7); backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(244,184,96,0.2);
+      padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    }
+    .header-content { max-width: 1000px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+    .header-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+    .header-logo-icon {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; font-size: 20px;
+      background: linear-gradient(135deg, #f4b860 0%, #f5a842 100%);
+      box-shadow: 0 4px 15px rgba(244,184,96,0.3);
+    }
+    .header-logo-text h1 { font-family: 'Playfair Display', serif; font-size: 16px; color: #8b6f47; font-weight: 700; }
+    .header-logo-text p { font-size: 11px; color: #a68968; letter-spacing: .5px; }
+    .header-nav a { text-decoration: none; color: #333; font-weight: 500; margin: 0 15px; transition: color .3s ease; }
+    .header-nav a:hover { color: #f4b860; }
+
+    .chat-container { flex: 1; display: flex; flex-direction: column; max-width: 1000px; width: 100%; margin: 0 auto; padding: 20px; }
+    .messages-area {
+      flex: 1; overflow-y: auto; padding: 20px;
+      display: flex; flex-direction: column; gap: 14px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 20px; border: 2px solid rgba(244,184,96,0.2); margin-bottom: 20px;
+    }
+
+    .message { display: flex; gap: 10px; animation: slideIn .25s ease-out; }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(8px);} to {opacity:1; transform: translateY(0);} }
+    .message.user { justify-content: flex-end; }
+    .message-avatar {
+      width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 16px;
+      background: linear-gradient(135deg, #f4b860 0%, #f5a842 100%);
+      box-shadow: 0 2px 10px rgba(244,184,96,0.3);
+    }
+    .message.user .message-avatar { background: rgba(139,111,71,0.2); order: 2; }
+
+    .message-bubble {
+      max-width: 72%;
+      padding: 10px 12px;
+      border-radius: 14px;
+      font-size: 15px;
+      line-height: 1.35;
+      word-wrap: break-word; overflow-wrap: anywhere;
+      white-space: normal;
+    }
+    .message.bot .message-bubble { background: rgba(244,184,96,0.15); color: #333; border-left: 4px solid #f4b860; }
+    .message.user .message-bubble {
+      background: linear-gradient(135deg, #f4b860 0%, #f5a842 100%);
+      color: #fff; border-radius: 14px 4px 14px 14px;
+    }
+
+    /* Compact Markdown (chat-like) */
+    .message-bubble > *:first-child { margin-top: 0 !important; }
+    .message-bubble > *:last-child { margin-bottom: 0 !important; }
+    .message-bubble p { margin: 4px 0; }
+
+    /* Make headings look like bold inline text */
+    .message-bubble h1, .message-bubble h2, .message-bubble h3,
+    .message-bubble h4, .message-bubble h5, .message-bubble h6 {
+      font-size: 1em; font-weight: 700; line-height: 1.3; display: inline; margin: 0;
+    }
+    .message-bubble h1 + *, .message-bubble h2 + *, .message-bubble h3 + * { margin-top: 4px; }
+
+    .message-bubble ul, .message-bubble ol { margin: 4px 0; padding-left: 18px; }
+    .message-bubble li { margin: 2px 0; line-height: 1.4; }
+
+    .message-bubble code {
+      background: rgba(0,0,0,0.08); padding: 1px 6px; border-radius: 6px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: .92em;
+    }
+    .message.user .message-bubble code { background: rgba(255,255,255,0.22); }
+
+    .message-bubble pre {
+      background: rgba(0,0,0,0.06); padding: 8px 10px; border-radius: 10px;
+      overflow-x: auto; margin: 6px 0; font-size: 14px; line-height: 1.35;
+    }
+    .message.user .message-bubble pre { background: rgba(255,255,255,0.16); }
+    .message-bubble pre code { background: transparent; padding: 0; }
+
+    .message-bubble blockquote {
+      border-left: 3px solid rgba(244,184,96,0.5);
+      padding-left: 10px; margin: 6px 0; color: rgba(0,0,0,0.75); font-style: italic;
+    }
+    .message.user .message-bubble blockquote { border-left-color: rgba(255,255,255,0.5); color: rgba(255,255,255,0.95); }
+    .message-bubble hr { border: none; border-top: 1px solid rgba(0,0,0,0.1); margin: 8px 0; }
+    .message-bubble a { color: #c07a00; text-decoration: underline; }
+    .message.user .message-bubble a { color: #fff; text-decoration: underline; }
+
+    .typing-indicator {
+      display: flex; gap: 6px; align-items: center; padding: 10px 12px;
+      background: rgba(244,184,96,0.15); border-left: 4px solid #f4b860; border-radius: 14px; width: fit-content;
+    }
+    .typing-dot { width: 8px; height: 8px; border-radius: 50%; animation: typingBounce 1.4s infinite; background: #f4b860; }
+    .typing-dot:nth-child(2){ animation-delay: .2s; } .typing-dot:nth-child(3){ animation-delay: .4s; }
+    @keyframes typingBounce { 0%,60%,100%{ transform: translateY(0); opacity: .6; } 30%{ transform: translateY(-8px); opacity: 1; } }
+
+    .input-area {
+      display: flex; gap: 12px; background: rgba(255,255,255,0.6); backdrop-filter: blur(20px);
+      padding: 16px; border-radius: 20px; border: 2px solid rgba(244,184,96,0.2); transition: all .3s ease;
+    }
+    .input-area:focus-within { border-color: rgba(244,184,96,0.5); box-shadow: 0 8px 30px rgba(244,184,96,0.1); background: rgba(255,255,255,0.9); }
+    textarea {
+      flex: 1; background: transparent; border: none; outline: none;
+      font-family: 'Inter', sans-serif; font-size: 15px; color: #333;
+      resize: none; max-height: 120px; line-height: 1.4; font-weight: 500;
+    }
+    textarea::placeholder { color: #aaa; }
+    .send-btn {
+      background: linear-gradient(135deg, #f4b860 0%, #f5a842 100%); color: #fff; border: none;
+      padding: 10px 18px; border-radius: 14px; font-weight: 600; cursor: pointer; font-size: 15px;
+      box-shadow: 0 4px 15px rgba(244,184,96,0.3);
+      transition: all .2s ease; display: flex; align-items: center; gap: 8px; white-space: nowrap; align-self: flex-end;
+    }
+    .send-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(244,184,96,0.5); }
+    .send-btn:active:not(:disabled) { transform: translateY(0); }
+    .send-btn:disabled { opacity: .6; cursor: not-allowed; }
+
+    .messages-area::-webkit-scrollbar { width: 8px; }
+    .messages-area::-webkit-scrollbar-track { background: transparent; }
+    .messages-area::-webkit-scrollbar-thumb { background: rgba(244,184,96,0.3); border-radius: 4px; }
+    .messages-area::-webkit-scrollbar-thumb:hover { background: rgba(244,184,96,0.5); }
+
+    @media (max-width: 768px) {
+      .message-bubble { max-width: 85%; }
+      .chat-container { padding: 10px; }
+      .input-area { flex-direction: column; }
+      .send-btn { width: 100%; align-self: stretch; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <a href="/" class="header-logo">
+        <div class="header-logo-icon">ꣳ</div>
+        <div class="header-logo-text">
+          <h1>Paras.ai</h1>
+          <p>Made with wisdom and blessings of Shrimad Rajchandra Maharaj</p>
+        </div>
+      </a>
+      <nav class="header-nav">
+        <a href="/">Home</a>
+        <a href="/chat">Chat</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="chat-container">
+    <div class="messages-area" id="messagesArea">
+      <div class="message bot">
+        <div class="message-avatar">P</div>
+        <div class="message-bubble"><strong>Jai Jinendra! 🙏 Welcome to Paras.ai — Jain wisdom at your fingertips.</strong></div>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <textarea id="messageInput" placeholder="Ask with a peaceful heart..." rows="1"></textarea>
+      <button class="send-btn" id="sendBtn"><span>Send</span><span>→</span></button>
+    </div>
+  </div>
+
+  <script>
+    const messagesArea = document.getElementById('messagesArea');
+    const messageInput  = document.getElementById('messageInput');
+    const sendBtn       = document.getElementById('sendBtn');
+
+    let es = null;
+    let currentMarkdown = '';
+    let renderScheduled = false;
+
+    // Marked config: chat-friendly
+    marked.setOptions({
+      gfm: true,
+      breaks: true,        // single \n → <br> inside paragraphs
+      smartLists: true,
+      smartypants: true
+    });
+
+    // -------- Markdown fixups for messy inputs ----------
+    function fixCommonMdMistakes(md) {
+      if (!md) return '';
+
+      // 1) Turn trailing inline "###" dividers into paragraph breaks
+      //    e.g., "kadam hain:###" → "kadam hain:\n\n"
+      md = md.replace(/:?\s*#{3,}\s*(?=\n|$)/g, ':\n\n');
+
+      // 2) If "###" appears mid-line (separator style), break before it
+      //    "text ### more" → "text\n\nmore"
+      md = md.replace(/\s+#{3,}\s+/g, '\n\n');
+
+      // 3) Ensure a space after list markers and ordered items
+      //    "*Item"→"* Item", "-Item"→"- Item", "1.Item"→"1. Item"
+      md = md.replace(/^\*(\S)/gm, '* $1');
+      md = md.replace(/^\-(\S)/gm, '- $1');
+      md = md.replace(/^(\d+)\.(\S)/gm, '$1. $2');
+
+      // 4) Ensure a newline before a list if it sticks to previous text on same line
+      md = md.replace(/([^\n])(\s*)(\d{1,3}\.\s)/g, (m, a, b, c) => a + '\n' + c);
+      md = md.replace(/([^\n])(\s*)([-*]\s+)/g, (m, a, b, c) => a + '\n' + c);
+
+      // 5) Collapse 3+ newlines → 2; trim trailing spaces
+      md = md.replace(/\n{3,}/g, '\n\n').replace(/[ \t]+\n/g, '\n').trim();
+
+      return md;
+    }
+
+    function closeUnbalancedCodeFences(md) {
+      const fenceCount = (md.match(/```/g) || []).length;
+      return fenceCount % 2 === 1 ? md + '\n```' : md;
+    }
+
+    function renderMarkdownToBubble(bubble, md) {
+      const processed = marked.parse(md);
+      bubble.innerHTML = processed;
+      messagesArea.scrollTop = messagesArea.scrollHeight;
+    }
+
+    // Auto-expand textarea
+    messageInput.addEventListener('input', function () {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+
+    function addMessage(text, sender, isMarkdown = false) {
+      const wrap = document.createElement('div');
+      wrap.className = `message ${sender}`;
+
+      const bubble = document.createElement('div');
+      bubble.className = 'message-bubble';
+
+      wrap.innerHTML = sender === 'bot'
+        ? '<div class="message-avatar">🕉️</div>'
+        : '<div class="message-avatar">🙂</div>';
+
+      if (isMarkdown && sender === 'bot') {
+        const cleaned = closeUnbalancedCodeFences(fixCommonMdMistakes(text || ''));
+        bubble.innerHTML = marked.parse(cleaned);
+      } else {
+        bubble.textContent = text ?? '';
+      }
+
+      wrap.appendChild(bubble);
+      messagesArea.appendChild(wrap);
+      messagesArea.scrollTop = messagesArea.scrollHeight;
+      return bubble;
+    }
+
+    function addTyping() {
+      const wrap = document.createElement('div');
+      wrap.className = 'message bot';
+      wrap.innerHTML = `
+        <div class="message-avatar">🕉️</div>
+        <div class="typing-indicator">
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+        </div>`;
+      messagesArea.appendChild(wrap);
+      messagesArea.scrollTop = messagesArea.scrollHeight;
+      return wrap;
+    }
+
+    // Debounced streaming render to avoid flicker & partial asterisks showing
+    function scheduleRender(bubble) {
+      if (renderScheduled) return;
+      renderScheduled = true;
+      requestAnimationFrame(() => {
+        const md = fixCommonMdMistakes(currentMarkdown);
+        renderMarkdownToBubble(bubble, md);
+        renderScheduled = false;
+      });
+    }
+
+    function finalizeRender(bubble) {
+      const finalized = closeUnbalancedCodeFences(fixCommonMdMistakes(currentMarkdown));
+      renderMarkdownToBubble(bubble, finalized);
+    }
+
+    function cleanupStream() {
+      if (es) { es.close(); es = null; }
+      currentMarkdown = '';
+      renderScheduled = false;
+      sendBtn.disabled = false;
+      messageInput.disabled = false;
+      messageInput.focus();
+    }
+
+    async function sendMessage() {
+      const text = messageInput.value.trim();
+      if (!text || es) return;
+
+      addMessage(text, 'user', false);
+
+      const typing = addTyping();
+      const botBubble = addMessage('', 'bot', true);
+      typing.remove();
+
+      currentMarkdown = '';
+      sendBtn.disabled = true;
+      messageInput.disabled = true;
+
+      es = new EventSource(`/api/stream?message=${encodeURIComponent(text)}`);
+
+      es.onmessage = (evt) => {
+        currentMarkdown += evt.data;         // raw chunk append
+        scheduleRender(botBubble);           // debounced render
+      };
+
+      es.addEventListener('done', () => {
+        finalizeRender(botBubble);
+        cleanupStream();
+      });
+
+      es.addEventListener('error', () => {
+        currentMarkdown += '\n\n*_(stream error)_*';
+        finalizeRender(botBubble);
+        cleanupStream();
+      });
+
+      messageInput.value = '';
+      messageInput.style.height = 'auto';
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+  </script>
+</body>
+</html>
