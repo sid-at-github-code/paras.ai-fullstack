@@ -116,5 +116,4 @@ def chat_stream():
     headers = {"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"}
     return Response(stream_with_context(generate()), headers=headers, mimetype="text/event-stream")
 
-if __name__ == "__main__":
-    app.run(debug=True)
+
